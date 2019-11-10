@@ -11,9 +11,14 @@ wxstr WINAPI widenF(char* str) { return widen(xstr(str)); }
 void execute_file(HWND hwnd, LPCWSTR str)
 {
 	// perform shellexecute
-	{ int ec = int(ShellExecuteW(hwnd,
-		NULL, str, NULL, NULL, SW_SHOW));
-	if(ec > 32) return; }
+	if(GetKeyState(VK_CONTROL) >= 0) { 
+		int ec = int(ShellExecuteW(hwnd,
+			L"edit", str, NULL, NULL, SW_SHOW));
+		if(ec > 32) return;
+		ec = int(ShellExecuteW(hwnd,
+			NULL, str, NULL, NULL, SW_SHOW));
+		if(ec > 32) return; 
+	}
 	
 	// open-with fallback
 	OpenAs_RunDLLW(hwnd, (HINSTANCE)0,
