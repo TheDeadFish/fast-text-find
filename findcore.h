@@ -23,8 +23,7 @@ namespace FastFind
 		
 	struct IcmpFind {
 		IcmpFind(cch* str) {needle.init(icmpPair_gen(str)); }
-		char* find(xarray<byte> data) { return icmpPair_find(
-			(char*)data.data, data.len, needle); }
+		char* find(xarray<byte> data, bool word);
 		Cstr_<u16> needle; 
 	};
 }

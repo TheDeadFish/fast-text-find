@@ -82,6 +82,8 @@ DWORD WINAPI loadThread(LPVOID param)
 
 DWORD WINAPI findThread(LPVOID str)
 {
+	bool word = IsDlgButtonChecked(s_hwnd, IDC_OPTWORD);
+
 	FastFind::IcmpFind ff(xstr((char*)str));
 	for(int i = 0; i < FindList::list.len; i++)
 	{
@@ -93,7 +95,7 @@ DWORD WINAPI findThread(LPVOID str)
 		
 		// search for string
 		auto& file = FindList::list[i];
-		if(ff.find(file.data)) {
+		if(ff.find(file.data, word)) {
 			listBox_addStr(s_hwnd, IDC_RESULTS, file.name, i);	
 		}
 	}

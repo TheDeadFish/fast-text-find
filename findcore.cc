@@ -97,4 +97,30 @@ char* icmpPair_find(char* kaystack,
 	return 0;
 }
 
+static
+byte* isWordChar(byte* ch) {
+	switch(*ch) { case '_':
+	case 'a'...'z': case 'A'...'Z':
+	case '0'...'9': return ch; }
+	return 0;
+}
+
+char* IcmpFind::find(xarray<byte> data, bool word)
+{
+	byte* end = data.end();
+	byte* pos = data;
+
+	while(1) {
+		// find next string
+		byte* f = (byte*)icmpPair_find(
+			(char*)pos, end-pos, needle);
+		if(!f || !word) return (char*)f;
+		pos = f+needle.slen;
+		
+		// check bounds
+		if(((--f < data.data)||(!isWordChar(f)))
+		&&((pos >= end)||(!isWordChar(pos))))
+			return (char*)f;
+	}
+}
 }
