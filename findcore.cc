@@ -61,6 +61,7 @@ namespace FastFind
 cstr_<u16> icmpPair_gen(cch* str)
 {
 	// allocate the string
+	if(!str) return {0,0};
 	cstr_<u16> ned; 
 	ned.slen = strlen(str);
 	ned.alloc_();

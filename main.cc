@@ -95,7 +95,7 @@ DWORD WINAPI findThread(LPVOID str)
 		
 		// search for string
 		auto& file = FindList::list[i];
-		if(ff.find(file.data, word)) {
+		if(!str || ff.find(file.data, word)) {
 			listBox_addStr(s_hwnd, IDC_RESULTS, file.name, i);	
 		}
 	}
@@ -126,8 +126,6 @@ void WINAPI onFind(HWND hwnd)
 {
 	if(s_state) { s_state = 2; return; }
 	char* str = getDlgItemText2(hwnd, IDC_QUERY);
-	if(!str) return;
-
 	listBox_reset(hwnd, IDC_RESULTS);	
 	captureControl(IDC_FIND);
 	CreateThread(0, 0, findThread, 
