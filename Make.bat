@@ -1,3 +1,4 @@
+setlocal
 call egcc.bat
 windres resource.rc -O coff -o resource.o
 set LFLAGS=%LFLAGS% -Wl,--large-address-aware -mwindows
