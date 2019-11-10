@@ -6,14 +6,20 @@ namespace FindList
 {
 
 xarray<FileInfo> list;
-const size_t sizeMax_total = 1500*1024*1024;
+static size_t sizeMax_total = 1500*1024*1024;
 const size_t sizeMax_file = 256*1024*1024;
 const u32 alloc_overhead = sizeof(FileInfo)+16;
-size_t alloc_total;
+static size_t alloc_total;
 size_t total_size;
 
 void reset(void) { list.Clear();
-	alloc_total = 0; total_size = 0; }
+	alloc_total = 0; total_size = 0; 
+
+	if(sizeMax_total) {
+		MEMORYSTATUS ms; GlobalMemoryStatus(&ms);
+		sizeMax_total = ms.dwAvailVirtual - 256*1024*1024;
+	}
+}
 	
 static __stdcall
 size_t find_cb(int code, FindFiles_t& ff)
