@@ -4,14 +4,25 @@
 #include "findcore.h"
 const char progName[] = "findText";
 
+extern "C" void WINAPI OpenAs_RunDLLW(HWND hwnd, 
+	HINSTANCE hAppInstance, LPCWSTR lpwszCmdLine, int nCmdShow);
+wxstr WINAPI widenF(char* str) { return widen(xstr(str)); }
+
+void execute_file(HWND hwnd, LPCWSTR str)
+{
+	// perform shellexecute
+	{ int ec = int(ShellExecuteW(hwnd,
+		NULL, str, NULL, NULL, SW_SHOW));
+	if(ec > 32) return; }
+	
+	// open-with fallback
+	OpenAs_RunDLLW(hwnd, (HINSTANCE)0,
+		str, SW_SHOWNORMAL);
+}
+
 static HWND s_hwnd;
 static char* s_path;
 static char s_state;
-
-void WINAPI mainDlgInit(HWND hwnd)
-{
-	s_hwnd = hwnd;
-}
 
 void WINAPI captureControl(int ctrl)
 {
@@ -78,8 +89,7 @@ DWORD WINAPI findThread(LPVOID str)
 		// search for string
 		auto& file = FindList::list[i];
 		if(ff.find(file.data)) {
-			listBox_addStr(s_hwnd, IDC_RESULTS, 
-				file.name, (LPARAM)&file);	
+			listBox_addStr(s_hwnd, IDC_RESULTS, file.name, i);	
 		}
 	}
 
@@ -125,7 +135,32 @@ void WINAPI onComplete(HWND hwnd, LPARAM lParam)
 	captureControl(0);
 }
 
+void WINAPI onEnter(HWND hwnd)
+{
+	HWND hFocus = GetFocus();
+	if(GetDlgItem(hwnd, IDC_QUERY) == hFocus) {
+		return onFind(hwnd); }
+	if(GetDlgItem(hwnd, IDC_RESULTS) == hFocus) {
+	
+		// get data slot
+		int iSel = listBox_getData(hwnd, IDC_RESULTS, 
+			listBox_getCurSel(hwnd, IDC_RESULTS));
+		if(iSel < 0) return;
+		
+		// open the file
+		auto& file = FindList::list[iSel];
+		execute_file(hwnd, widenF(
+			pathCat(s_path, file.name)));
+	}
 
+
+}
+
+void WINAPI mainDlgInit(HWND hwnd)
+{
+	s_hwnd = hwnd;
+	size_status(0);
+}
 
 BOOL CALLBACK mainDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -137,11 +172,15 @@ BOOL CALLBACK mainDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			SetCursor(LoadCursor(0, IDC_WAIT )); 
 			msgResult = 1; })
 			
+		
 		ON_MESSAGE(WM_APP, onComplete(hwnd, lParam))
 		
 	  CASE_COMMAND(
+			ON_COMMAND(IDOK, onEnter(hwnd))
 			ON_COMMAND(IDC_FIND, onFind(hwnd))
 			ON_COMMAND(IDC_LOAD, onLoad(hwnd))
+			ON_CONTROL(LBN_DBLCLK, IDC_RESULTS, onEnter(hwnd))
+			
 		,)
 	,)
 }

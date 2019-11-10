@@ -41,7 +41,7 @@ size_t find(cch* path)
 {
 	reset();
 	return findFiles(path, 
-		FF_ERR_CB, 0, find_cb);
+		FF_ERR_CB|FF_DIR_AFT, 0, find_cb);
 }
 }
 
