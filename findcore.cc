@@ -42,12 +42,40 @@ size_t find_cb(int code, FindFiles_t& ff)
 	
 	RET: return progress(ff.relName(), code);
 }
+
+
+
+static 
+int pathcmp(cch* str1, cch* str2) 
+{
+	// compare the strings
+	byte ch1, ch2; int ret;
+	for(;; str1++, str2++) {
+		ch1 = toUpper(*str1);
+		ch2 = toUpper(*str2);
+		if(ret=ch1-ch2) break;
+		if(!ch1) return ret;
+	}
 	
+	// sort files first
+	for(; *str1; str1++) {
+		if(isPathSep(*str1)){ ret += 0x1000; break; }}
+	for(; *str2; str2++) {
+		if(isPathSep(*str2)){ ret -= 0x1000; break; }}
+	return ret;
+}
+
+static
+int FileInfo_cmp(const FileInfo& a, const FileInfo& b) {
+	return pathcmp(a.name.data, b.name.data); }
+
 size_t find(cch* path)
 {
 	reset();
-	return findFiles(path, 
+	size_t ret = findFiles(path, 
 		FF_ERR_CB|FF_DIR_AFT, 0, find_cb);
+	qsort(list, FileInfo_cmp);
+	return ret;
 }
 }
 
