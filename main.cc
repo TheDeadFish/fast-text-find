@@ -28,6 +28,7 @@ void execute_file(HWND hwnd, LPCWSTR str)
 static HWND s_hwnd;
 static char* s_path;
 static char s_state;
+static char s_loaded;
 
 void WINAPI captureControl(int ctrl)
 {
@@ -75,7 +76,9 @@ size_t progress(cch* name, int code) {
 
 DWORD WINAPI loadThread(LPVOID param)
 {
+	s_loaded = false;
 	size_t ec = FindList::find(s_path);
+	s_loaded = !ec && FindList::list.len;
 	PostMessage(s_hwnd, WM_APP, 0, ec);
 	return 0;
 }
@@ -167,11 +170,26 @@ void WINAPI mainDlgInit(HWND hwnd)
 	size_status(0);
 }
 
+void WINAPI onClose(HWND hwnd)
+{
+	if(s_loaded) {
+		int opt = MessageBoxA(hwnd, 
+			"Are you sure you want to close?",
+			"Fast Text Find", MB_YESNO);
+		if(opt != IDYES) {
+			ShowWindow(hwnd, SW_MINIMIZE);
+			return;
+		}
+	}
+
+	EndDialog(hwnd, 0);
+}
+
 BOOL CALLBACK mainDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	DLGMSG_SWITCH(
 		ON_MESSAGE(WM_INITDIALOG, mainDlgInit(hwnd))
-		ON_MESSAGE(WM_CLOSE, EndDialog(hwnd, 0))
+		ON_MESSAGE(WM_CLOSE, onClose(hwnd))
 		
 		ON_MESSAGE(WM_SETCURSOR, if(s_state) {
 			SetCursor(LoadCursor(0, IDC_WAIT )); 
