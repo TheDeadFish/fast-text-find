@@ -2,6 +2,8 @@
 #include "win32hlp.h"
 #include "resource.h"
 #include "findcore.h"
+#include "resize.h"
+
 const char progName[] = "findText";
 
 extern "C" void WINAPI OpenAs_RunDLLW(HWND hwnd, 
@@ -29,6 +31,7 @@ static HWND s_hwnd;
 static char* s_path;
 static char s_state;
 static char s_loaded;
+static WndResize s_resize;
 
 void WINAPI captureControl(int ctrl)
 {
@@ -170,6 +173,16 @@ void WINAPI onEnter(HWND hwnd)
 void WINAPI mainDlgInit(HWND hwnd)
 {
 	s_hwnd = hwnd;
+	
+	s_resize.init(hwnd);
+	s_resize.add(hwnd, IDC_PATH, HOR_BOTH);
+	s_resize.add(hwnd, IDC_LOAD, HOR_RIGH);
+	s_resize.add(hwnd, IDC_QUERY, HOR_BOTH);
+	s_resize.add(hwnd, IDC_FIND, HOR_RIGH);
+	s_resize.add(hwnd, IDC_OPTWORD, HOR_RIGH);
+	s_resize.add(hwnd, IDC_OPTWCH, HOR_RIGH);
+	s_resize.add(hwnd, IDC_RESULTS, HVR_BOTH);
+	
 	size_status(0);
 }
 
@@ -203,11 +216,14 @@ BOOL CALLBACK mainDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		
 		ON_MESSAGE(WM_SETCURSOR, if(s_state) {
 			SetCursor(LoadCursor(0, IDC_WAIT )); 
-			msgResult = 1; })
+			msgResult = 1; } else { return FALSE; })
 			
 		ON_MESSAGE(WM_DROPFILES, onDropFiles(hwnd, wParam))
 		
 		ON_MESSAGE(WM_APP, onComplete(hwnd, lParam))
+		
+		ON_MESSAGE(WM_SIZE, s_resize.resize(hwnd, wParam, lParam))		
+		
 		
 	  CASE_COMMAND(
 			ON_COMMAND(IDOK, onEnter(hwnd))
