@@ -108,13 +108,8 @@ DWORD WINAPI findThread(LPVOID str)
 }
 
 
-
-
-void WINAPI onLoad(HWND hwnd)
+void WINAPI onLoad_(HWND hwnd, char* folder)
 {
-	// select the folder
-	if(s_state) { s_state = 2; return; }
-	char* folder = selectFolder(hwnd, 0, 0);
 	if(!folder) return; 
 	free_repl(s_path, folder);
 	
@@ -123,6 +118,14 @@ void WINAPI onLoad(HWND hwnd)
 	listBox_reset(hwnd, IDC_RESULTS);
 	captureControl(IDC_LOAD);
 	CreateThread(0, 0, loadThread, 0, 0, 0);
+}
+
+void WINAPI onLoad(HWND hwnd)
+{
+	// select the folder
+	if(s_state) { s_state = 2; return; }
+	char* folder = selectFolder(hwnd, 0, 0);
+	onLoad_(hwnd, folder);
 }
 
 void WINAPI onFind(HWND hwnd)
@@ -185,6 +188,13 @@ void WINAPI onClose(HWND hwnd)
 	EndDialog(hwnd, 0);
 }
 
+void onDropFiles(HWND hwnd, LPARAM wParam)
+{
+	if(s_state) return;
+	xArray<xstr> files = hDropGet((HANDLE)wParam);
+	onLoad_(hwnd, files[0].release());
+}
+
 BOOL CALLBACK mainDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	DLGMSG_SWITCH(
@@ -195,6 +205,7 @@ BOOL CALLBACK mainDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			SetCursor(LoadCursor(0, IDC_WAIT )); 
 			msgResult = 1; })
 			
+		ON_MESSAGE(WM_DROPFILES, onDropFiles(hwnd, wParam))
 		
 		ON_MESSAGE(WM_APP, onComplete(hwnd, lParam))
 		
