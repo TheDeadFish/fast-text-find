@@ -12,6 +12,15 @@ wxstr WINAPI widenF(char* str) { return widen(xstr(str)); }
 
 void execute_file(HWND hwnd, LPCWSTR str)
 {
+	// explore the folder
+	if(GetKeyState(VK_SHIFT) < 0) {
+		int ec = int(ShellExecuteW(hwnd, L"explore", 
+			getPath0(str), NULL, NULL, SW_SHOW));
+		if(ec > 32) return;
+		contError(hwnd, "failed to open folder");
+		return;
+	}
+
 	// perform shellexecute
 	if(GetKeyState(VK_CONTROL) >= 0) { 
 		int ec = int(ShellExecuteW(hwnd,
@@ -114,7 +123,8 @@ DWORD WINAPI findThread(LPVOID str)
 void WINAPI onLoad_(HWND hwnd, char* folder)
 {
 	if(!folder) return; 
-	free_repl(s_path, folder);
+	free_repl(s_path, 
+		pathCatF(folder, ""));
 	
 	// load the files
 	setDlgItemText(hwnd, IDC_PATH, "");
