@@ -172,6 +172,23 @@ bool cdef_check(xarray<byte> data, byte* str)
 	return true;
 }
 
+bool inc_check(byte* base, byte* f)
+{
+	// locate include
+	byte* i = f;
+	while((--i >= base)&&(!isNewLn(i)))
+		if(!strnicmp((char*)i, "include"))
+			goto FOUND_INC; return false; 
+	FOUND_INC: VARFIX(i);
+	
+	// check string
+	for(i += 7; isSpcChar(i); i++) { if(i >= f) return false; }
+	if(!is_one_of(*i, '\'', '\"', '<')) return false;
+	for(byte state = *i; (i++, 1);) { if(i >= f) return true;
+		if(*f == '\\') f++; ei(*f == state) return false; }
+	__builtin_trap();
+}
+
 char* IcmpFind::find(xarray<byte> data, int flags)
 {
 	byte* end = data.end();
@@ -196,7 +213,12 @@ FIND_NEXT:
 			if(!cdef_check(data, f))
 				goto FIND_NEXT;
 		}
-
+		
+		// check includes
+		if(flags & 4) {
+			if(inc_check(data, f))
+				goto FIND_NEXT;
+		}
 	}
 	
 	return (char*)f;

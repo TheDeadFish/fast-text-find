@@ -29,4 +29,5 @@ FONT 8, "Ms Shell Dlg"
     AUTOCHECKBOX    "WCHAR", IDC_OPTWCH, 287, 40, 41, 8, WS_DISABLED
     LTEXT           "Static", IDC_TOTSIZE, 6, 40, 68, 8, SS_LEFT
     AUTOCHECKBOX    "Defs", IDC_OPTDEF, 213, 40, 31, 8
+    AUTOCHECKBOX    "no #inc", IDC_OPTINC, 165, 40, 40, 8
 }
