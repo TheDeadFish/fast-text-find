@@ -134,22 +134,71 @@ byte* isWordChar(byte* ch) {
 	return 0;
 }
 
-char* IcmpFind::find(xarray<byte> data, bool word)
+static
+bool cmprev(byte* pos, 
+	byte* base, const char* str)
+{
+	int len = strlen(str);
+	pos = (pos+1) - len;
+	if(pos < base) return false;
+	return !memcmp(pos, str, len);
+}
+
+static
+bool isSpcChar(byte* ch) {
+	return *ch <= ' '; }
+	
+static
+bool isNewLn(byte* ch) { return 
+	(*ch == '\n')||(*ch == '\r'); }
+
+bool cdef_check(xarray<byte> data, byte* str)
+{
+	// exclude operators
+	byte* f = str;
+	while(--f >= data.data) {
+		if(isSpcChar(f)||(*f == '\\')) continue;
+		if(!isWordChar(f) || cmprev(f, data.data, "return"))
+			return false; break;
+	}
+	
+	// exclude strings
+	for(f = str; (f > data.data)&&(!isNewLn(f-1)); f--);
+	for(byte state = 0;; f++) { if(f >= str) return !state;
+		if(!state) { if(is_one_of(*f, '\'', '\"')) state = *f; }
+		else { if(*f == '\\') f++; ei(*f == state) state = 0; }
+	}
+	
+	return true;
+}
+
+char* IcmpFind::find(xarray<byte> data, int flags)
 {
 	byte* end = data.end();
 	byte* pos = data;
-
-	while(1) {
-		// find next string
-		byte* f = (byte*)icmpPair_find(
-			(char*)pos, end-pos, needle);
-		if(!f || !word) return (char*)f;
-		pos = f+needle.slen;
+	
+FIND_NEXT:
+	byte* f = (byte*)icmpPair_find(
+		(char*)pos, end-pos, needle);
+	pos = f+needle.slen;
 		
-		// check bounds
-		if(((--f < data.data)||(!isWordChar(f)))
-		&&((pos >= end)||(!isWordChar(pos))))
-			return (char*)f;
+	if(f) {
+	
+		// check bounds	
+		if(flags & 1) {
+			if(!(((--f < data.data)||(!isWordChar(f)))
+			&&((pos >= end)||(!isWordChar(pos)))))
+				goto FIND_NEXT;
+		}
+		
+		// check def
+		if(flags & 2) {
+			if(!cdef_check(data, f))
+				goto FIND_NEXT;
+		}
+
 	}
+	
+	return (char*)f;
 }
 }

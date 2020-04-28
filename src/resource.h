@@ -3,6 +3,7 @@
 #endif
 
 #define IDD_DIALOG1                             100
+#define IDC_OPTDEF                              1001
 #define IDC_OPTWORD                             1003
 #define IDC_FIND                                1006
 #define IDC_QUERY                               1007
